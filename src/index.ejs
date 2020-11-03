@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>自动化任务</title>
+    <% if (htmlWebpackPlugin.options.nodeModules) { %>
+      <!-- Add `node_modules/` to global paths so `require` works properly in development -->
+      <script>
+        require('module').globalPaths.push('<%= htmlWebpackPlugin.options.nodeModules.replace(/\\/g, '\\\\') %>')
+      </script>
+    <% } %>
+  </head>
+  <body>
+    <div id="app"></div>
+    <!-- Set `__static` path to static files in production -->
+    <% if (!process.browser) { %>
+      <script>
+        if (process.env.NODE_ENV !== 'development') window.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
+      </script>
+    <% } %>
+
+    <!-- webpack builds are automatically injected -->
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+      }
+
+      html, body { 
+        font-family: Helvetica '微软雅黑' sans-serif; 
+        overflow: hidden;
+        user-select: none;
+      }
+
+      ::-webkit-scrollbar{width:8px;height:4px;}
+      ::-webkit-scrollbar-button{width:8px;height:0}
+      ::-webkit-scrollbar-track{background:0 0}
+      ::-webkit-scrollbar-thumb{background:rgba(255, 255,255, 0.2); border-radius: 4px; -webkit-transition:.3s;transition:.3s}
+      ::-webkit-scrollbar-thumb:hover{background:rgba(255, 255,255, 0.8);}
+      ::-webkit-scrollbar-thumb:active{background:rgba(255, 255,255, 0.8);}
+
+    </style>
+  </body>
+</html>

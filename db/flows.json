@@ -1,0 +1,9 @@
+{
+    "flows": [{
+        "name": "微信自动发送",
+        "workspace": {
+            "width": "1054",
+            "height": "754"
+        }
+    }]
+}
