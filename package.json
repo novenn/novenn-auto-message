@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "element-ui": "^2.14.0",
+    "http": "0.0.1-security",
     "moment": "^2.29.1",
     "robotjs": "^0.5.1",
     "vue": "2.5.16",

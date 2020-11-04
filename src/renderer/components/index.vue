@@ -2,6 +2,14 @@
   <div id="wrapper" class="app">
     <div class="placeholder" ref="placeholder">
       <img :src="require('../assets/weixin.png')" class="placeholder__img" />
+      <div class="tips-1">
+        <i class="el-icon-top-left"></i>
+        <div>请打开微信并底图对齐</div>
+      </div>
+      <div class="tips-2">
+        <i class="el-icon-top"></i>
+        <div>将微信固定在最顶层</div>
+      </div>
     </div>
     <div class="workspace">
       <div class="workspace-header">
@@ -114,6 +122,7 @@
       padding: 20px;
       box-sizing: border-box;
       background: #ccc;
+      position: relative;
 
       &__img {
         width: 700px;
@@ -121,6 +130,37 @@
         opacity: 0.7;
         border-radius: 2px;
         box-shadow: 0 0 20px #666;
+      }
+
+      .tips-1, .tips-2 {
+        position: absolute;
+        z-index: 10;
+        color: orangered;
+      }
+
+      .tips-1 {
+        left: 20px;
+        top: 20px;
+        font-weight: 900;
+        i {
+          font-size: 24px;
+        }
+        div {
+          padding-left: 20px;
+        }
+      }
+
+      .tips-2 {
+        left: 518px;
+        top: 40px;
+        font-weight: 900;
+        text-align: center;
+        i {
+          font-size: 24px;
+        }
+        div {
+          padding-left: 20px;
+        }
       }
     }
 
