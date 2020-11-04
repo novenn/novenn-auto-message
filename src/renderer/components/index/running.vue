@@ -1,25 +1,48 @@
 <template>
     <div class="running">
         <div class="running-header">
-            <h4 class="running-header__title">任务详情</h4>
-            <el-button v-if="done" type="info" @click="handleCancel" size="small">返回</el-button>
+            <h4 class="running-header__title"><i class="el-icon-tickets"></i>任务详情</h4>
+            <el-button v-if="staus !== 1" type="info" @click="handleCancel" size="small">返回</el-button>
             <el-button v-else type="danger" @click="handleCancel" size="small">取消任务</el-button>
         </div>
         <div class="running-body">
             <template >
                 <div class="task-panel">
-                    <div class="task-panel__content">
-                        <div>本次任务将在 {{startAtFormat}} 向<span class="nick-name">“{{task.users.join('“,”')}}”</span>等好友发送如下消息：</div>
-                        <div class="content">{{task.sendContent}}</div>
-                    </div>
-                    <div class="task-panel__countdown" :class="{'done' : done}">
-                        <p>距离任务开始还有</p>
+                    <div class="task-panel__countdown" :class="{'done' : status !== 1}" v-if="status == 1">
                         <div class="task-panel__countdown__detail">{{countdownContent}}</div>
+                        <p>任务倒计时</p>
                     </div>
-                    <div class="task-panel__success" v-if="done">
-                        <div><i class="el-icon-circle-check"></i> 执行成功</div>
+                    <div class="task-panel__success" v-if="status === 2">
+                        <div><i class="el-icon-success"></i></div>
+                        <div class="content">执行成功</div>
                         <div style="margin-top:20px">
                             <img width="200px" :src="require('../../assets/dashang.jpg')" />
+                        </div>
+                    </div>
+                    <div class="task-panel__error" v-if="status === 3">
+                        <div><i class="el-icon-error"></i></div>
+                        <div class="content">执行失败</div>
+                        <div style="margin-top:20px" class="reason">
+                           原因：{{errMsg}}
+                        </div>
+                    </div>
+                    <div class="task-panel__content"  v-if="status === 1">
+                        <div class="item">
+                            <span class="label">将在 <i class="el-icon-alarm-clock"></i></span>
+                            <span class="value">{{startAtFormat}}</span>
+                        </div>
+                         <div class="item">
+                            <span class="label">向 <i class="el-icon-user"></i></span>
+                            <div class="value">
+                                <div v-for="user in task.users" :key="user">{{user}}</div>
+                            </div>
+                        </div>
+
+                        <div class="item">
+                            <span class="label">发送 <i class="el-icon-document-checked"></i></span>
+                            <div class="value">
+                                {{task.sendContent}}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -44,6 +67,8 @@ export default {
         countdownContent: '00:00:00',
         beatTime: 0,
         done: false,
+        status: 1, // 1 倒计时中， 2，成功 3 失败
+        errMsg: ''
     }),
     mounted() {
         if(this.task) {
@@ -106,12 +131,17 @@ export default {
             const offsetX = postion[0] * scale + 20
             const offsetY = postion[1] * scale + 20
 
+            if(postion[0] < 0 || postion[1] < 0) {
+                this.status = 3
+                this.errMsg = '程序不完全放置于主显示器内'
+                return
+            }
+
             robot.setMouseDelay(200);
             const users = this.task.users
             const isTest = this.task.isTest
             for(let i = 0; i<users.length; i++) {
                 robot.moveMouseSmooth(offsetX + 200, offsetY + 55);
-                robot.moveMouseSmooth(offsetX, offsetY);
                 robot.mouseClick('left', true);
                 await this.delay(200)
                 execSync(`echo ${users[i]}|clip`)
@@ -135,7 +165,7 @@ export default {
                 }
             }
 
-            this.done= true
+            this.status = 2
         }
     }
 }
@@ -152,6 +182,16 @@ export default {
         font-size: 16px;
         align-items: center;
         font-weight: 500;
+        color: #ccc;
+        &__title {
+            i {
+                font-size: 18px;
+                vertical-align: text-bottom;
+            }
+            padding-left: 10px;
+            box-sizing: border-box;
+            font-weight: 500;
+        }
     }
 
     &-body {
@@ -160,28 +200,28 @@ export default {
         .task-panel {
             &__content {
                 margin-top: 20px;
-                padding: 10px;
-                min-height: 60px;
-                border-radius: 4px;
-                background: rgba($color: #fff, $alpha: 0.1);
-                line-height: 24px;
-                color: rgba($color: #fff, $alpha: 0.8);
-                .nick-name {
-                    color: #F56C6C;
-                }
+                .item {
+                    display: flex;
+                    padding: 4px 20px;
+                    font-size: 12px;
+                    .label {
+                        display: inline-block;
+                        width: 80px;
+                        text-align: right;
+                        flex-shrink: 0;
+                        color: rgba(255, 255, 255, .2)
+                    }
 
-                .content {
-                    padding: 10px 20px;
-                    margin-top: 10px;
-                    font-size: 14px;
-                    border-radius: 4px;
-                    background: rgba(255, 255, 255, 0.03);
-                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3) inset;
+                    .value {
+                        margin-left: 10px;
+                        flex-grow: 1;
+                        color: rgba(255, 255, 255, .3)
+                    }
                 }
             }
 
             &__countdown{
-                font-size: 32px;
+                font-size: 16px;
                 text-align: center;
                 margin-top: 40px;
                 color: #999;
@@ -202,10 +242,27 @@ export default {
             &__success {
                 padding-top: 40px;
                 text-align: center;
-                font-size: 28px;
-                color: #5c887a;
-                .iconfont {
-                    font-size: 48px;
+                font-size: 16px;
+                color: #67C23A;
+                i {
+                    font-size: 46px;
+                }
+            }
+
+            &__error {
+                padding-top: 40px;
+                text-align: center;
+                font-size: 16px;
+                color: #F56C6C;
+                i {
+                    font-size: 46px;
+                }
+
+                .reason {
+                    color: #666;
+                    font-size: 12px;
+                    text-align: center;
+                    padding-top: 20px;
                 }
             }
         }

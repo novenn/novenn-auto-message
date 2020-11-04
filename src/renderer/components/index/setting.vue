@@ -1,7 +1,7 @@
 <template>
     <div class="setting">
         <div class="setting-header">
-            <h4 class="setting-header__title">创建任务</h4>
+            <h4 class="setting-header__title"><i class="el-icon-set-up"></i>创建任务</h4>
         </div>
         <div class="setting-body">
             <el-form ref="form" :model="form" label-width="80px">
@@ -150,6 +150,14 @@ export default {
         
         startRun(task) {
             const isTest = task.isTest
+
+            // 如果窗口位置不在主窗口 提示
+            const mainWindow = require('electron').remote.getCurrentWindow()
+            const postion = mainWindow.getPosition()
+
+            if(postion[0] < 0 || postion[1] < 0) {
+                return this.$message.error('请把程序完全放置于主显示器内')
+            }
             this.$confirm(`
                 <p>请确认你的操作</p>
                 ${isTest ? 
@@ -185,12 +193,14 @@ export default {
 <style lang="scss" scoped>
 .setting {
     padding: 10px;
-    color: white;
+    color: #ccc;
     &-header {
         &__title {
-            width: 80px;
-            text-align: right;
-            padding-right: 10px;
+            i {
+                font-size: 20px;
+                vertical-align: text-bottom;
+            }
+            padding-left: 10px;
             box-sizing: border-box;
             font-weight: 500;
             padding-bottom: 20px;
