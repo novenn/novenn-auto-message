@@ -1,0 +1,216 @@
+<template>
+    <div class="workspace">
+        <div class="workspace-body">
+            <div class="empty" v-if="!tasks.length">
+                <div class="empty-tips">
+                    <img width="200px" :src="require('../../assets/empty.png')" />
+                    <div>未创建任务</div>
+                </div>
+
+                <div class="">
+                    <el-button type="primary" size="mini" @click="handleAddTask">
+                        <i class="el-icon-plus"></i>
+                        <span>创建任务</span>
+                    </el-button>
+                </div>
+                <div style="height: 20px"></div>
+                <el-link style="font-size: 12px;" @click="handleToHomePage">查看教程</el-link>
+            </div>
+            <div class="task-container" v-else>
+                <div class="task-container__header">
+                    <div class="show-all-block">
+                        <el-switch
+                            v-model="showAll"
+                            active-color="#13ce66"
+                            inactive-color="#666">
+                        </el-switch>
+                        <span>显示全部</span>
+                    </div>
+                </div>
+                <div class="countdown-block">
+                    <div class="countdown-block__title">距离下一个任务</div>
+                    <div class="countdown-block__time">00:22:33</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="workspace-footer">
+            <span>当前版本: {{version}}</span>
+            <span v-if="hasNewVersion">，发现 <el-badge is-dot class="item"> <el-link type="primary" @click="handleToHomePage">新版本</el-link></el-badge></span>
+        </div>
+        <div class="editor-container"  v-if="editingTask">
+            <editor :task="editingTask" @save="handleSaveTask"/>
+        </div>
+    </div>
+</template>
+<script>
+import taskDAO from '../../../../db/taskDAO'
+import pkg from '../../../../package.json'
+import sysApi from '../../../api/sysApi'
+import editor from  './editor'
+import {TASK_TYPE} from '../../../common/config'
+export default {
+    data() {
+        return {
+            showAll: false,
+            tasks: [],
+            undoTasks: [],
+            doneTasks: [],
+            version: pkg.version || '0.0.1',
+            hasNewVersion: false,
+            editingTask: null
+        }
+    },
+    components: {
+        editor
+    },
+    mounted() {
+        const tasks = taskDAO.tasks()
+        this.updateTaskList(tasks)
+        this.chackVersion()
+    },
+    methods: {
+        chackVersion() {
+            if(!this.version) {
+                return this.hasNewVersion = true
+            }
+            sysApi.checkVersion().then(res => {
+                console.log(res)
+                if(res && res.version ) {
+                    const currentVersion = this.version.split('.')
+                    const remoteVersion = res.version.split('.')
+                    
+                    const gt = false
+                    for(var i = 0; i<3; i++) {
+                        if(+remoteVersion[i] > +currentVersion[i]) {
+                            return this.hasNewVersion = true
+                        }
+                    }
+                }
+            })
+        },
+        updateTaskList(tasks = []) {
+            this.tasks = tasks
+        },
+
+        handleToHomePage() {
+            const {shell}=require('electron').remote;
+            shell.openExternal('https://www.novenn.com/%E5%BE%AE%E4%BF%A1%E6%9C%BA%E5%99%A8%E4%BA%BA/');  
+        },
+
+        handleAddTask() {
+            const task = {
+                id: null,
+                name: '',
+                type: TASK_TYPE.SEND_MESSAGE,
+                users: [],  // 用户名或者群
+                content: '',  // 发送的文本内容 群公告内容
+                files: [], // 图片 视频 文件等路径
+            }
+
+            this.editingTask = task
+        },
+        handleSaveTask(task) {
+            let tasks = []
+            if(task.id) {
+                tasks = taskDAO.update(task.id, task)
+            } else {
+                tasks = taskDAO.add(task)
+            }
+
+            this.updateTaskList(tasks)
+            this.editingTask = null
+            this.$message.success('保存成功')
+        }
+
+    }
+}
+</script>
+<style lang="scss" scoped>
+.workspace {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex: 1;
+    &-body {
+        flex-grow: 1;
+        overflow: auto;
+        .empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            &-tips {
+                text-align: center;
+                padding: 50px 0;
+                img {
+                    width: 200px;
+                    opacity: 0.5;
+                }
+
+                div {
+                    font-size: 14px;
+                    color: #999;
+                    padding-top: 20px;
+                }
+            }
+        }
+
+        .task-container {
+            .show-all-block {
+                font-size: 12px;
+                color: #999;
+                padding: 10px;
+                display: flex;
+                justify-content: flex-end;
+                align-items: center;
+                /deep/ .el-switch {
+                    transform: scale(.8) translateY(1px);
+                }
+
+                span {
+                    margin-left: 0px;
+                }
+            }
+
+            .countdown-block {
+                display: flex;
+                flex-direction: column;
+                justify-items: center;
+                
+            }
+        }
+    }
+
+    &-footer {
+        padding: 10px;
+        text-align: center;
+        font-size: 12px;
+        color: #999;
+        vertical-align: text-bottom;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+
+        /deep/ .el-link {
+            font-size: 12px;
+        }
+        span {
+            display: inline-flex;
+            align-items: flex-end;
+        }
+    }
+
+    .editor-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: #1b2029;
+        z-index: 999;
+    }
+}
+</style>

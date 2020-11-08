@@ -10,27 +10,27 @@
         <i class="el-icon-top"></i>
         <div>将微信固定在最顶层</div>
       </div>
+
+      <el-button @click="handleTest">POST</el-button>
     </div>
-    <div class="workspace">
-      <div class="workspace-header">
+    <div class="workspace-panel">
+      <div class="workspace-panel-header">
         <nheader />
       </div>
-      <div class="workspace-body">
-        <setting @start="handleStart" v-show="runningTask == null"/>
-        <running :task="runningTask" v-if="runningTask" @cancel="handleCancel"/>
+      <div class="workspace-panel-body">
+        <workspace @edit="handleEdit"/>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-  var setting = require('./index/setting').default
-  var running = require('./index/running').default
+  var workspace = require('./index/workspace').default
   var nheader = require('./public/header').default
   var robot = require("robotjs");
   var execSync = require('child_process').execSync
   var main = require('electron').remote.getCurrentWindow()
-  var flows = require('../../../db/flows.json')
+  import tailApi from '../../api/tailApi'
 
   export default {
     name: 'index-page',
@@ -42,11 +42,10 @@
       // })
     },
     data: () => ({
-      runningTask: null
+      editTask: null
     }),
     components: {
-      setting,
-      running,
+      workspace,
       nheader
     },
     mounted() {
@@ -58,14 +57,19 @@
           main.setIgnoreMouseEvents(false)
         })
       },
+      handleTest() {
+        tailApi.newClient('XXXXXXXXXXXXX').then(res => {
+          console.log(res)
+        })
+      },
       open (link) {
         this.$electron.shell.openExternal(link)
       },
       handleStart(task) {
-        this.runningTask = task
+        // this.runningTask = task
       },
-      handleCancel() {
-        this.runningTask = null
+      handleEdit(task) {
+        this.editTask = task
       },
       run() {
 
@@ -164,13 +168,12 @@
       }
     }
 
-    .workspace {
+    .workspace-panel {
       background: #1b2029;
       flex-grow: 1;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      padding-bottom: 10px;
       &-header {
         flex-shrink: 0;
       }
@@ -178,6 +181,7 @@
       &-body {
         flex-grow: 1;
         overflow: auto;
+        display: flex;
       }
     }
   }

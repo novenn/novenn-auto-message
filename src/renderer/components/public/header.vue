@@ -9,22 +9,15 @@
 <script>
 var mainWindow = require('electron').remote.getCurrentWindow()
 var version = require('../../../../package.json').version
-var http = require('http');
+var superagent = require('superagent');
 export default {
     mounted() {
         this.versionCheck()
     },
     methods: {
         versionCheck() {
-            http.get('https://www.novenn.com/%E5%BE%AE%E4%BF%A1%E6%9C%BA%E5%99%A8%E4%BA%BA/version.txt', function(res){
-                res.setEncoding('utf8');
-                let text = ''
-                res.on('data',function(chunk){
-                    text += chunk;
-                });
-                res.on('end' ,() => {
-                    console.log(text)
-                })
+            superagent.get('https://www.novenn.com/%E5%BE%AE%E4%BF%A1%E6%9C%BA%E5%99%A8%E4%BA%BA/version.txt').end((err, res) => {
+                console.log(res)
             })
             console.log(version)
         },
@@ -52,6 +45,7 @@ export default {
     justify-content: flex-end;
     font-size: 18px;
     padding: 0 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 
     .header-drag {
          -webkit-app-region: drag;

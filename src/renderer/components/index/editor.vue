@@ -4,16 +4,22 @@
             <h4 class="setting-header__title"><i class="el-icon-set-up"></i>创建任务</h4>
         </div>
         <div class="setting-body">
-            <el-form ref="form" :model="form" label-width="80px">
+            <el-form ref="form" :model="form" label-width="80px" size="mini">
+                 <el-form-item label="任务名称">
+                    <el-input
+                        style="width: 200px"
+                        placeholder="请输入名称"
+                        v-model="form.name"/>
+                </el-form-item>
                 <el-form-item label="任务类型">
-                    <el-select v-model="form.taskType" class="form-item__vale" size="small">
-                        <el-option :value="1" :label="'自动发送'">自动发送</el-option>
+                    <el-select v-model="form.type" class="form-item__vale" size="small">
+                        <el-option :value="1" :label="'自动发送'">发送内容</el-option>
                         <!-- <el-option :value="2" :label="'自动转发'">自动转发</el-option>
                         <el-option :value="3" :label="'自动回复'">自动回复</el-option> -->
                     </el-select>
                 </el-form-item>
 
-                <template v-if="form.taskType === 1">
+                <template v-if="form.type === 1">
                     <!-- <el-form-item label="发送方式">
                         <el-radio-group v-model="form.sendType" size="small">
                             <el-radio-button :label="1" border>定时发送</el-radio-button>
@@ -36,10 +42,10 @@
                             v-model="nickName"
                             ref="saveTagInput"
                             size="small"
-                            placeholder="输入微信用户名"
+                            placeholder="输入微信用户/群名"
                             @keyup.enter.native="handleInputConfirm"
                             @blur="handleInputConfirm"/>
-                        <el-button v-else class="button-new-tag" size="small" @click="nickNameInputVisible = true">添加微信用户</el-button>
+                        <el-button v-else class="button-new-tag" size="small" @click="nickNameInputVisible = true">添加</el-button>
                     </el-form-item>
 
                     <el-form-item label="执行时间">
@@ -49,7 +55,8 @@
                             <el-radio-button :label="3" border>1天后</el-radio-button>
                             <el-radio-button :label="4" border>自定义</el-radio-button>
                         </el-radio-group>
-                        <el-date-picker
+                        <el-date-picker 
+                            style="margin-top: 20px"
                             v-if="startAtType === 4"
                             size="small"
                             v-model="form.startAt"
@@ -71,11 +78,37 @@
                             type="textarea"
                             :rows="2"
                             placeholder="请输入内容"
-                            v-model="form.sendContent"/>
+                            v-model="form.content"/>
+                    </el-form-item>
+
+                    <el-form-item label="发送文件">
+                       <!-- <el-upload
+                            class="upload-demo"
+                            ref="upload"
+                            action=""
+                            :on-remove="handleRemoveFile"
+                            :on-change="handleFilesChange"
+                            :file-list="form.files"
+                            :auto-upload="false">
+                            <el-button slot="trigger" size="small" type="primary">选取文件</el-button>
+                            <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
+                            </el-upload> -->
+                        <div>
+                            <el-button type="primary" @click="$refs.fileInput.click()">选择文件</el-button>
+                            <span style="font-size: 12px; color: #666"> 可选择图片，视频，和其他文件</span>
+                        </div>
+                        <div>
+                            <div v-for="(file, index) in form.files" :key="index" class="file-item">
+                                <span>{{file.name}}</span>
+                                <i class="el-icon-error" @click="handleRemoveFile(index)"></i>
+                            </div>
+                        </div>
+                        <input type="file" ref="fileInput" style="width: 0; height: 0; visibility: hidden" @change="handleSelectFile"/>
                     </el-form-item>
                     <el-form-item label="">
-                        <el-button size="small" type="primary" @click="handleStart">启动任务</el-button>
-                        <el-button size="small" type="info" @click="handleTest">测试任务</el-button>
+                        <el-button size="small" type="primary" @click="handleStart">保存</el-button>
+                        <el-button size="small" type="success" @click="handleTest">测试</el-button>
+                        <el-button size="small" type="info" @click="handleTest">取消</el-button>
                     </el-form-item>
                 </template>
             </el-form>
@@ -84,20 +117,29 @@
 </template>
 
 <script>
+import {TASK_TYPE} from '../../../common/config'
+
 export default {
+    props: {
+        task: {
+            type: Object,
+            default: () => ({})
+        }
+    },
     mounted() {
-        console.log('eeee')
+        this.form = JSON.parse(JSON.stringify(this.task))
+        this.form.startAtType = 4
     },
     data: () => ({
         nickName: '',
         nickNameInputVisible: false,
         startAtType: 1,
         form: {
-            taskType: 1,
-            sendType: 1,
-            users: ['文件传输助手'],
+            type: 1,
+            users: [],
             startAt: '',
-            sendContent: ''
+            content: '',
+            files: []
         },
     }),
     methods: {
@@ -118,12 +160,17 @@ export default {
                 const startAt = Date.now() + times[this.startAtType - 1] * 1000
                 this.form.startAt = startAt
             }
-            if(!this.form.users.length) {
-                tips = '请添加微信用户'
+            if(!this.form.name) {
+                tips = '请输入任务名'
+            }else if(!this.form.users.length) {
+                tips = '请添加微信用户/群'
             } else if(!this.form.startAt) {
                 tips = '请设置发送时间'
-            } else if(!this.form.sendContent) {
-                tips = '请设置发送内容'
+            } else if(
+                TASK_TYPE.SEND_MESSAGE === this.form.type && (!this.form.content && !this.form.files.length) ||
+                (TASK_TYPE.SEND_ANNOUNCE === this.form.type && !this.form.content)
+            ) {
+                tips = '请设置发送内容/文件'
             }
 
             if(tips) {
@@ -156,26 +203,23 @@ export default {
             const postion = mainWindow.getPosition()
 
             if(postion[0] < 0 || postion[1] < 0) {
-                return this.$message.error('请把程序完全放置于主显示器内')
+               this.$message.error('请把程序完全放置于主显示器内')
             }
-            this.$confirm(`
-                <p>请确认你的操作</p>
-                ${isTest ? 
-                    '<div>1、本次任务是测试任务，不会执行发送操作；</div>':
-                    '<div>1、本次任务是真实任务，倒计时结束后将会向指定用户发送消息；</div>'
-                }
-                <div>2、请把微信放置到<style="color: #f56c6c;">主显示器的左上角</span>，并且<style="color: #f56c6c;">确保微信不被其他程序遮盖</span>；</div>
-                <div>3、选择确定该操作表示你已知悉操作后果，并为此负责。</div>
-            `, {
-                dangerouslyUseHTMLString: true,
-                confirmButtonText: '确定',
-                cancelButtonText: '取消',
-                type: 'danger',
-                customClass: 'setting-confirm'
-            }).then(() => {
-                this.$emit('start', task)
-            }).catch(() => {
-            });
+            
+            this.$emit('save', Object.assign({}, this.task, this.form))
+        },
+        handleRemoveFile(index) {
+            this.form.files.splice(index, 1)
+        },
+        handleSelectFile(event) {
+            const file = event.target.files[0]
+            if(file) {
+                this.form.files.push({
+                    name: file.name,
+                    path: file.path
+                })
+                this.$refs.fileInput.value = ''
+            }
         }
     }
 }
@@ -223,6 +267,30 @@ export default {
   .input-new-tag {
     width: 160px;
     vertical-align: bottom;
+  }
+
+  .file-item {
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    font-size: 12px;
+    line-height: 20px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+
+    span {
+        flex-grow: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    i {
+        cursor: pointer;
+    }
   }
 }
 

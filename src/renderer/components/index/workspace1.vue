@@ -1,6 +1,6 @@
 <template>
     <div class="running">
-        <div class="running-header">
+        <!-- <div class="running-header">
             <h4 class="running-header__title"><i class="el-icon-tickets"></i>任务详情</h4>
             <el-button v-if="staus !== 1" type="info" @click="handleCancel" size="small">返回</el-button>
             <el-button v-else type="danger" @click="handleCancel" size="small">取消任务</el-button>
@@ -47,7 +47,7 @@
                     </div>
                 </div>
             </template>
-        </div>
+        </div> -->
     </div>
 </template>
 <script>
@@ -57,10 +57,10 @@ var execSync = require('child_process').execSync
 var moment = require('moment')
 export default {
     props: {
-        task: {
-            type: Object,
-            default: () => {}
-        }
+        // task: {
+        //     type: Object,
+        //     default: () => {}
+        // }
     },
     data: () => ({
         startAtFormat: '',
@@ -71,10 +71,10 @@ export default {
         errMsg: ''
     }),
     mounted() {
-        if(this.task) {
-            this.startAtFormat = moment(this.task.startAt).format('YYYY-MM-DD hh:mm:ss')
-            this.heartBeats()
-        }
+        // if(this.task) {
+        //     this.startAtFormat = moment(this.task.startAt).format('YYYY-MM-DD hh:mm:ss')
+        //     this.heartBeats()
+        // }
     },
     methods: {
         handleCancel() {
