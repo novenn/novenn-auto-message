@@ -26,10 +26,16 @@
                         </el-switch>
                         <span>显示全部</span>
                     </div>
+
+                    <el-button type="text"  @click="handleAddTask">新建任务</el-button>
                 </div>
                 <div class="countdown-block">
                     <div class="countdown-block__title">距离下一个任务</div>
                     <div class="countdown-block__time">00:22:33</div>
+                </div>
+
+                <div class="task-container__body">
+                    <task v-for="(task, index) in tasks" :key="index" :task="task" @edit="handleEdit(task)" @delete="handleDelete(task)"/>
                 </div>
             </div>
         </div>
@@ -39,7 +45,7 @@
             <span v-if="hasNewVersion">，发现 <el-badge is-dot class="item"> <el-link type="primary" @click="handleToHomePage">新版本</el-link></el-badge></span>
         </div>
         <div class="editor-container"  v-if="editingTask">
-            <editor :task="editingTask" @save="handleSaveTask"/>
+            <editor :task="editingTask" @save="handleSaveTask" @cancel="handleCancelEdit"/>
         </div>
     </div>
 </template>
@@ -49,6 +55,7 @@ import pkg from '../../../../package.json'
 import sysApi from '../../../api/sysApi'
 import editor from  './editor'
 import {TASK_TYPE} from '../../../common/config'
+import task from './task'
 export default {
     data() {
         return {
@@ -62,7 +69,8 @@ export default {
         }
     },
     components: {
-        editor
+        editor,
+        task
     },
     mounted() {
         const tasks = taskDAO.tasks()
@@ -110,6 +118,9 @@ export default {
 
             this.editingTask = task
         },
+        handleCancelEdit() {
+            this.editingTask = null
+        },
         handleSaveTask(task) {
             let tasks = []
             if(task.id) {
@@ -121,6 +132,15 @@ export default {
             this.updateTaskList(tasks)
             this.editingTask = null
             this.$message.success('保存成功')
+        },
+        handleEdit(task) {
+            this.editingTask = task
+        },
+        handleDelete(task) {
+            const tasks = taskDAO.delete(task.id)
+            this.updateTaskList(tasks)
+            this.editingTask = null
+            this.$message.success('删除成功')
         }
 
     }
@@ -136,6 +156,9 @@ export default {
     &-body {
         flex-grow: 1;
         overflow: auto;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
         .empty {
             display: flex;
             flex-direction: column;
@@ -159,27 +182,53 @@ export default {
         }
 
         .task-container {
-            .show-all-block {
-                font-size: 12px;
-                color: #999;
-                padding: 10px;
-                display: flex;
-                justify-content: flex-end;
-                align-items: center;
-                /deep/ .el-switch {
-                    transform: scale(.8) translateY(1px);
-                }
+            display: flex;
+            flex-direction: column;
+            height: 100%;
 
-                span {
-                    margin-left: 0px;
+            &__header {
+                display: flex;
+                justify-content: space-between;
+                padding: 10px;
+                .show-all-block {
+                    font-size: 12px;
+                    color: #999;
+                    display: flex;
+                    justify-content: flex-end;
+                    align-items: center;
+                    /deep/ .el-switch {
+                        transform: scale(.8) translateY(1px);
+                    }
+
+                    span {
+                        margin-left: 0px;
+                    }
                 }
             }
 
             .countdown-block {
                 display: flex;
                 flex-direction: column;
-                justify-items: center;
+                align-items: center;
+
+                &__title {
+                    font-size: 14px;
+                    color: #999;
+                }
+
+                &__time {
+                    font-size: 40px;
+                    color: #F56C6C;
+                    font-family: fantasy !important;
+                }
                 
+            }
+
+            &__body {
+                margin: 20px;
+                flex-grow: 1;
+                overflow-y: auto;
+                overflow-x: hidden;
             }
         }
     }

@@ -108,7 +108,7 @@
                     <el-form-item label="">
                         <el-button size="small" type="primary" @click="handleStart">保存</el-button>
                         <el-button size="small" type="success" @click="handleTest">测试</el-button>
-                        <el-button size="small" type="info" @click="handleTest">取消</el-button>
+                        <el-button size="small" type="info" @click="handleCancel">取消</el-button>
                     </el-form-item>
                 </template>
             </el-form>
@@ -193,6 +193,10 @@ export default {
                 return 
             }
             this.startRun(Object.assign({isTest: true}, this.form))
+        },
+
+        handleCancel() {
+            this.$emit('cancel')
         },
         
         startRun(task) {

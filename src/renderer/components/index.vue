@@ -11,7 +11,6 @@
         <div>将微信固定在最顶层</div>
       </div>
 
-      <el-button @click="handleTest">POST</el-button>
     </div>
     <div class="workspace-panel">
       <div class="workspace-panel-header">

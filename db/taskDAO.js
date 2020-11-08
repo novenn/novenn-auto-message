@@ -11,9 +11,10 @@ export default {
     add(task) {
         tasks.push(task)
         dao.write(TABLE, {tasks})
+        return tasks
     },
     delete(id) {
-        const index = taskTable.findIndex(item => item.id === id)
+        const index = tasks.findIndex(item => item.id === id)
         if(index !== -1) {
             tasks.splice(index, 1)
             dao.write(TABLE, {tasks})
@@ -27,7 +28,7 @@ export default {
             dao.write(TABLE, {tasks})
         }
 
-        return taskTable
+        return tasks
     },
     
 }
