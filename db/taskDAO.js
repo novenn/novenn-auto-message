@@ -1,5 +1,6 @@
 import dao from './DAOBase'
 const path = require('path')
+const md5 = require('md5')
 const TABLE = path.resolve(__dirname, './taskTable.json')
 const taskTable = dao.read(TABLE)
 const tasks = taskTable && taskTable.tasks ? taskTable.tasks : []
@@ -9,6 +10,7 @@ export default {
         return tasks
     },
     add(task) {
+        task['id'] = md5(Date.now() + Math.random())
         tasks.push(task)
         dao.write(TABLE, {tasks})
         return tasks

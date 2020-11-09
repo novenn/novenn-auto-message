@@ -1,7 +1,7 @@
 <template>
     <div class="workspace">
         <div class="workspace-body">
-            <div class="empty" v-if="!tasks.length">
+            <div class="empty" v-if="!tasks.length && !doneTasks.length">
                 <div class="empty-tips">
                     <img width="200px" :src="require('../../assets/empty.png')" />
                     <div>未创建任务</div>
@@ -31,7 +31,7 @@
                 </div>
                 <div class="countdown-block">
                     <div class="countdown-block__title">距离下一个任务</div>
-                    <div class="countdown-block__time">00:22:33</div>
+                    <div class="countdown-block__time">{{countdown}}</div>
                 </div>
 
                 <div class="task-container__body">
@@ -54,18 +54,20 @@ import taskDAO from '../../../../db/taskDAO'
 import pkg from '../../../../package.json'
 import sysApi from '../../../api/sysApi'
 import editor from  './editor'
-import {TASK_TYPE} from '../../../common/config'
+import {TASK_TYPE, TASK_STATUS} from '../../../common/config'
 import task from './task'
+import { STATUS_CODES } from 'http'
+
 export default {
     data() {
         return {
             showAll: false,
-            tasks: [],
             undoTasks: [],
             doneTasks: [],
             version: pkg.version || '0.0.1',
             hasNewVersion: false,
-            editingTask: null
+            editingTask: null,
+            countdown: '--:--:--'
         }
     },
     components: {
@@ -77,13 +79,17 @@ export default {
         this.updateTaskList(tasks)
         this.chackVersion()
     },
+    computed: {
+        tasks() {
+            return this.showAll ? [...this.undoTasks, ...this.doneTasks]: this.undoTasks
+        }
+    },
     methods: {
         chackVersion() {
             if(!this.version) {
                 return this.hasNewVersion = true
             }
             sysApi.checkVersion().then(res => {
-                console.log(res)
                 if(res && res.version ) {
                     const currentVersion = this.version.split('.')
                     const remoteVersion = res.version.split('.')
@@ -97,8 +103,98 @@ export default {
                 }
             })
         },
+        updateCountDown(rest) {
+            rest = rest <= 0 ? 0 : rest
+            const hours = Math.floor(rest / 3600)
+            rest = rest - hours * 3600
+            const munites = Math.floor(rest / 60)
+            const seconds = (rest - munites * 60)
+            this.countdown = `${hours.toString().padStart(2, '0')}:${munites.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+        },
+        runTask(task) {
+            this.doingTask = task
+            console.log('开始任务', task.name)
+            if(!this.worker) {
+                const cp = require('child_process')
+                const path = require('path')
+                const script = path.resolve(__dirname, '../../../process/worker.js')
+                this.worker = cp.fork(script, [cp.execSync])
+                this.worker.on('message', ({type, content}) => {
+                    if(type === 'finish') {
+                        console.log('结束任务',this.doingTask.name)
+                        this.updateTaskToDone(this.doingTask)
+                        this.doingTask = null
+                    } else if(type === 'copy') {
+                        cp.execSync(`echo ${content}|clip`)
+                    }
+                    
+                })
+            }
+
+            var mainWindow = require('electron').remote.getCurrentWindow()
+            const postion = mainWindow.getPosition()
+            const scale  = window.devicePixelRatio
+            const offsetX = postion[0] * scale + 20
+            const offsetY = postion[1] * scale + 20
+
+            this.worker.send({
+                ...task,
+                offsetX,
+                offsetY
+            })
+        },
+        startLoop() {
+            this.stopLoop()
+            this.timer = setInterval(() => {
+                const now = Date.now()
+                for(let i=0; i<this.undoTasks.length; i++) {
+                    const task = this.undoTasks[i]
+                    let rest = Math.ceil((task.startAt - now) / 1000)
+
+                    if(i === 0) {
+                        this.updateCountDown(rest)
+                    }
+
+                    if(rest <= 0) {
+                        if (i == 0) {
+                            task['status'] = TASK_STATUS.DONING
+                            if(!this.doingTask) {
+                                this.runTask(task)
+                            }
+                        } else {
+                            task['status'] = TASK_STATUS.WAITING
+                        }
+                    } else {
+                        break
+                    }
+                    
+                }
+            }, 1000)
+        },
+        stopLoop() {
+            if(this.timer) {
+                clearInterval(this.timer)
+            }
+        },
         updateTaskList(tasks = []) {
-            this.tasks = tasks
+            const undoTasks = tasks.filter(item => !item.done).sort((a, b) => a.startAt -b.startAt)
+            const doneTasks = tasks.filter(item => item.done).sort((a, b) => a.startAt -b.startAt)
+
+            undoTasks.forEach(item => item['status'] = TASK_STATUS.UNDO)
+            doneTasks.forEach(item => item['status'] = TASK_STATUS.DONE)
+            // this.tasks = [...undoTasks, ...doneTasks]
+            this.undoTasks = undoTasks
+            this.doneTasks = doneTasks
+            this.startLoop()
+        },
+
+        updateTaskToDone(task) {
+            const index = this.tasks.findIndex(item => item === task)
+            task['status'] = TASK_STATUS.DONE
+            task['done'] = true
+            this.undoTasks.splice(index, 1)
+            this.doneTasks.unshift(task)
+            // taskDAO.update(task.id, task)
         },
 
         handleToHomePage() {

@@ -1,9 +1,9 @@
 <template>
-    <div class="task">
+    <div class="task" :class="'status-'+task.status">
         <div class="task__header">
             <div class="task__header__name">{{task.name}}</div>
             <div class="task__header__actions">
-                <span class="edit" @click="handleEdit">编辑</span>
+                <span class="edit" @click="handleEdit">{{task.status === TASK_STATUS.DONE ? '复制':'编辑'}}</span>
                 
                 <el-popconfirm
                     confirm-button-text='确认'
@@ -27,7 +27,7 @@
 
                 <div class="task__body__line__half" style="width: 40%">
                     <div class="task__body__label" style="width: 40px">状态：</div>
-                    <div class="task__body__value">{{'未开始'}}</div>
+                    <div class="task__body__value">{{task.status | status}}</div>
                 </div>
             </div>
             <div class="task__body__line">
@@ -42,7 +42,7 @@
 
 <script>
 import moment from 'moment'
-import {TASK_TYPE} from '../../../common/config'
+import {TASK_TYPE, TASK_STATUS} from '../../../common/config'
 export default {
     props: {
         task: {
@@ -51,13 +51,17 @@ export default {
         }
     },
     data: () => ({
+        TASK_STATUS,
         brief: '',
         desc: ''
     }),
     filters: {
         timeFmt(time) {
             return time && moment(time).format('MM-DD hh:mm:ss')
-        }
+        },
+        status(status) {
+            return ['', '未开始', '排队中', '执行中', '已完成'][status]
+        } 
     },
     watch: {
         task : {
@@ -84,6 +88,14 @@ export default {
     background: rgba($color: #ffffff, $alpha: .1);
     color: #999;
     font-size: 12px;
+
+    &.status-1 {
+
+    }
+
+    &.status-4 {
+        opacity: 0.6;
+    }
 
     &+& {
         margin-top: 10px;
