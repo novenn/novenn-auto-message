@@ -1,7 +1,6 @@
 import dao from './DAOBase'
-const path = require('path')
 const md5 = require('md5')
-const TABLE = path.resolve(__dirname, './taskTable.json')
+const TABLE = 'TASK_TABLE'
 const taskTable = dao.read(TABLE)
 const tasks = taskTable && taskTable.tasks ? taskTable.tasks : []
 

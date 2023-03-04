@@ -1,7 +1,7 @@
 {
   "name": "novenn-auto-task",
   "productName": "帮你发微信",
-  "version": "0.0.1",
+  "version": "1.0.1",
   "author": "novenn",
   "description": "wechat auto task",
   "license": null,
@@ -24,8 +24,9 @@
   "dependencies": {
     "element-ui": "^2.14.0",
     "getmac": "^5.17.0",
+    "md5": "^2.3.0",
     "moment": "^2.29.1",
-    "robotjs": "^0.5.1",
+    "robotjs": "^0.6.0",
     "superagent": "^6.1.0",
     "vue": "2.5.16",
     "vue-electron": "^1.0.6",

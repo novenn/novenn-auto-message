@@ -29,13 +29,22 @@
 
                     <el-button type="text"  @click="handleAddTask">新建任务</el-button>
                 </div>
-                <div class="countdown-block">
+                
+                <div class="countdown-block" v-if="tasks.length">
                     <div class="countdown-block__title">距离下一个任务</div>
                     <div class="countdown-block__time">{{countdown}}</div>
                 </div>
 
-                <div class="task-container__body">
+                <div class="task-container__body"  v-if="tasks.length">
                     <task v-for="(task, index) in tasks" :key="index" :task="task" @edit="handleEdit(task)" @delete="handleDelete(task)"/>
+                </div>
+                <div class="success-block" v-else>
+                        
+                    <div class="image">
+                        <img class="success" :src="require('../../assets/success.png')" />
+                        <img class="qrcode" :src="require('../../assets/dashang.jpg')" />
+                    </div>
+                    <div class="content">干完了，打赏一下吧 !!!</div>
                 </div>
             </div>
         </div>
@@ -43,20 +52,26 @@
         <div class="workspace-footer">
             <span>当前版本: {{version}}</span>
             <span v-if="hasNewVersion">，发现 <el-badge is-dot class="item"> <el-link type="primary" @click="handleToHomePage">新版本</el-link></el-badge></span>
+            <span class="comment">
+                <el-link type="info" :underline="false" @click="handleToHomePage">
+                    <i class="el-icon-chat-dot-round" style="font-size: 14px; margin-left: 10px"></i>
+                </el-link>
+            </span>
         </div>
         <div class="editor-container"  v-if="editingTask">
-            <editor :task="editingTask" @save="handleSaveTask" @cancel="handleCancelEdit"/>
+            <editor :task="editingTask" @save="handleSaveTask" @cancel="handleCancelEdit" @test="handleTestTask"/>
         </div>
     </div>
 </template>
 <script>
-import taskDAO from '../../../../db/taskDAO'
+import taskDAO from '../../../db/taskDAO'
 import pkg from '../../../../package.json'
 import sysApi from '../../../api/sysApi'
 import editor from  './editor'
 import {TASK_TYPE, TASK_STATUS} from '../../../common/config'
 import task from './task'
 import { STATUS_CODES } from 'http'
+ import tailApi from '../../../api/tailApi';
 
 export default {
     data() {
@@ -113,34 +128,37 @@ export default {
         },
         runTask(task) {
             this.doingTask = task
-            console.log('开始任务', task.name)
             if(!this.worker) {
                 const cp = require('child_process')
                 const path = require('path')
-                const script = path.resolve(__dirname, '../../../process/worker.js')
+                const script = path.resolve(__static, './process/worker.js')
                 this.worker = cp.fork(script, [cp.execSync])
                 this.worker.on('message', ({type, content}) => {
                     if(type === 'finish') {
-                        console.log('结束任务',this.doingTask.name)
-                        this.updateTaskToDone(this.doingTask)
+                        if(!this.doingTask.isTest) {
+                            this.updateTaskToDone(this.doingTask)
+                            tailApi.run()
+                        }
                         this.doingTask = null
                     } else if(type === 'copy') {
-                        cp.execSync(`echo ${content}|clip`)
+                        cp.execSync(`echo ${content} | clip`)
+                    } else {
+                        console.log('子进程报错',type, content)
                     }
-                    
                 })
             }
 
             var mainWindow = require('electron').remote.getCurrentWindow()
             const postion = mainWindow.getPosition()
             const scale  = window.devicePixelRatio
-            const offsetX = postion[0] * scale + 20
-            const offsetY = postion[1] * scale + 20
+            const offsetX = (postion[0] + 20) * scale
+            const offsetY = (postion[1] + 20) * scale
 
             this.worker.send({
                 ...task,
                 offsetX,
-                offsetY
+                offsetY,
+                scale
             })
         },
         startLoop() {
@@ -178,7 +196,7 @@ export default {
         },
         updateTaskList(tasks = []) {
             const undoTasks = tasks.filter(item => !item.done).sort((a, b) => a.startAt -b.startAt)
-            const doneTasks = tasks.filter(item => item.done).sort((a, b) => a.startAt -b.startAt)
+            const doneTasks = tasks.filter(item => item.done).sort((a, b) => b.startAt - a.startAt)
 
             undoTasks.forEach(item => item['status'] = TASK_STATUS.UNDO)
             doneTasks.forEach(item => item['status'] = TASK_STATUS.DONE)
@@ -194,7 +212,7 @@ export default {
             task['done'] = true
             this.undoTasks.splice(index, 1)
             this.doneTasks.unshift(task)
-            // taskDAO.update(task.id, task)
+            taskDAO.update(task.id, task)
         },
 
         handleToHomePage() {
@@ -217,6 +235,13 @@ export default {
         handleCancelEdit() {
             this.editingTask = null
         },
+        handleTestTask(task) {
+            if(this.doingTask) {
+                return this.$message.error('有任务正在执行，请稍等')
+            }
+
+            this.runTask(task)
+        },
         handleSaveTask(task) {
             let tasks = []
             if(task.id) {
@@ -230,7 +255,15 @@ export default {
             this.$message.success('保存成功')
         },
         handleEdit(task) {
+            if(task.status === TASK_STATUS.DONE) {
+                task = JSON.parse(JSON.stringify(task))
+                task['id'] = null
+                task['status'] = TASK_STATUS.UNDO
+                task['done'] = false
+            } 
+            
             this.editingTask = task
+            
         },
         handleDelete(task) {
             const tasks = taskDAO.delete(task.id)
@@ -286,6 +319,7 @@ export default {
                 display: flex;
                 justify-content: space-between;
                 padding: 10px;
+                flex-shrink: 0;
                 .show-all-block {
                     font-size: 12px;
                     color: #999;
@@ -306,6 +340,7 @@ export default {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
+                flex-shrink: 0;
 
                 &__title {
                     font-size: 14px;
@@ -318,6 +353,36 @@ export default {
                     font-family: fantasy !important;
                 }
                 
+            }
+
+            .success-block {
+                display: flex;
+                flex-grow: 1;
+                justify-content: center;
+                flex-direction: column;
+                align-items: center;
+
+                .image {
+                    position: relative;
+                    padding: 100px;
+                    width: 200px;
+                    height: 120px;
+                    .success {
+                        width: 200px;
+                    }
+                    .qrcode {
+                        position: absolute;
+                        top: 26px;
+                        left: 159px;
+                        border-radius: 50%;
+                        width: 160px;
+                    }
+                }
+
+                .content {
+                    color: #F56C6C;
+                    font-size: 12px;
+                }
             }
 
             &__body {

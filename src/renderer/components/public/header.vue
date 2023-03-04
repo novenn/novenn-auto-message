@@ -1,9 +1,14 @@
 <template>
     <div class="header">
+        <div>
+            <i class="el-icon-house" @click="handleToHomePage"></i>
+        </div>
         <div class="header-drag"></div>
-        <i class="el-icon-share" @click="handleShare"></i>
-        <i class="el-icon-minus" @click="handleMin"/>
-        <i class="el-icon-close" @click="handleClose"/>
+        <div>
+            <i class="el-icon-share" @click="handleShare"></i>
+            <i class="el-icon-minus" @click="handleMin"/>
+            <i class="el-icon-close" @click="handleClose"/>
+        </div>
     </div>
 </template>
 <script>
@@ -31,7 +36,11 @@ export default {
             const execSync = require('child_process').execSync
             execSync('echo https://www.novenn.com/%E5%BE%AE%E4%BF%A1%E6%9C%BA%E5%99%A8%E4%BA%BA|clip')
             this.$message.success('链接复制成功')
-        }
+        },
+        handleToHomePage() {
+            const {shell}=require('electron').remote;
+            shell.openExternal('https://www.novenn.com/%E5%BE%AE%E4%BF%A1%E6%9C%BA%E5%99%A8%E4%BA%BA/');  
+        },
     }
 }
 </script>
@@ -55,6 +64,13 @@ export default {
     i {
         padding: 5px;
         cursor: pointer;
+        &:hover {
+            color: #409EFF;
+        }
+
+        &.el-icon-close:hover {
+            color: #F56C6C;
+        }
     }
 }
 </style>

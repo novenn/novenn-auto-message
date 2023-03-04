@@ -56,11 +56,6 @@
           main.setIgnoreMouseEvents(false)
         })
       },
-      handleTest() {
-        tailApi.newClient('XXXXXXXXXXXXX').then(res => {
-          console.log(res)
-        })
-      },
       open (link) {
         this.$electron.shell.openExternal(link)
       },

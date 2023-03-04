@@ -8,6 +8,8 @@ if (process.env.NODE_ENV !== 'development') {
   global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
 }
 
+
+
 let mainWindow
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
@@ -17,18 +19,20 @@ function createWindow () {
   /**
    * Initial window options
    */
+
   mainWindow = new BrowserWindow({
     height: 540,
     useContentSize: false,
-    width: 1200,
+    width: 1140,
     frame: false,
-    // resizable: false
+    resizable: false,
   })
 
   mainWindow.setMenu(null)
 
   mainWindow.loadURL(winURL)
 
+  // mainWindow.webContents.openDevTools()
 
   mainWindow.on('closed', () => {
     mainWindow = null

@@ -1,5 +1,5 @@
 Arguments: 
-  D:\program\nodejs\node.exe C:\Users\VENN\AppData\Roaming\npm\node_modules\yarn\bin\yarn.js add md5
+  D:\program\nodejs\node.exe C:\Users\VENN\AppData\Roaming\npm\node_modules\yarn\bin\yarn.js build:win32
 
 PATH: 
   D:\program\Git\mingw64\bin;D:\program\Git\usr\bin;C:\Users\VENN\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0;C:\Windows\System32\OpenSSH;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\Program Files\Intel\WiFi\bin;C:\Program Files\Common Files\Intel\WirelessCommon;D:\program\nodejs;D:\program\Git\cmd;C:\Users\VENN\AppData\Local\Yarn\Data\global\node_modules\.bin;C:\Program Files\OpenSSL-Win64\bin;C:\Python27;D:\Android_SDK\platform-tools;D:\Android_SDK\tools;D:\Android\jre\bin;D:\Program Files\ffmpeg\bin;D:\program\flutter\bin;D:\program\ffmpeg\bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0;C:\WINDOWS\System32\OpenSSH;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\IDE;C:\Users\VENN\AppData\Local\Microsoft\WindowsApps;C:\Users\VENN\AppData\Roaming\npm;D:\program\Microsoft VS Code\bin;D:\Program Files\Fiddler;%USERPROFILE%\AppData\Local\Microsoft\WindowsApps
@@ -14,13 +14,18 @@ Platform:
   win32 x64
 
 Trace: 
-  Error: EBUSY: resource busy or locked, unlink 'D:\workspace\novenn-auto-message\node_modules\electron\dist\content_resources_200_percent.pak'
+  SyntaxError: D:\workspace\novenn-auto-message\package.json: Unexpected token } in JSON at position 1561
+      at JSON.parse (<anonymous>)
+      at C:\Users\VENN\AppData\Roaming\npm\node_modules\yarn\lib\cli.js:1625:59
+      at Generator.next (<anonymous>)
+      at step (C:\Users\VENN\AppData\Roaming\npm\node_modules\yarn\lib\cli.js:304:30)
+      at C:\Users\VENN\AppData\Roaming\npm\node_modules\yarn\lib\cli.js:315:13
 
 npm manifest: 
   {
     "name": "novenn-auto-task",
     "productName": "帮你发微信",
-    "version": "0.0.1",
+    "version": "1.0.1",
     "author": "novenn",
     "description": "wechat auto task",
     "license": null,
@@ -43,12 +48,15 @@ npm manifest:
     "dependencies": {
       "element-ui": "^2.14.0",
       "getmac": "^5.17.0",
+      "md5": "^2.3.0",
       "moment": "^2.29.1",
       "robotjs": "^0.5.1",
       "superagent": "^6.1.0",
       "vue": "2.5.16",
       "vue-electron": "^1.0.6",
-      "vue-router": "^3.0.1"
+      "vue-router": "^3.0.1",
+      "electron-debug": "^1.5.0",
+      "electron-devtools-installer": "^2.2.4",
     },
     "devDependencies": {
       "ajv": "^6.5.0",

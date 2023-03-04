@@ -57,7 +57,7 @@ export default {
     }),
     filters: {
         timeFmt(time) {
-            return time && moment(time).format('MM-DD hh:mm:ss')
+            return time && moment(time).format('MM-DD HH:mm:ss')
         },
         status(status) {
             return ['', '未开始', '排队中', '执行中', '已完成'][status]
